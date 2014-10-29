@@ -90,20 +90,8 @@ public class BBExecutor {
      * @return True if the variable was successfully incremented
      */
     private boolean incr(ArrayList<String> args) {
-        boolean successful = false;
-        String vName = args.get(0);
-        for (BBVariable v : variables) {
-            if (v.getName().equals(vName)) {
-                v.increment();
-                successful = true;
-                break;
-            }
-        }
-        if (!successful) {
-            variables.add(new BBVariable(vName, 1));
-            successful = true;
-        }
-        return successful;
+        getVariable(args.get(0)).increment();
+        return true;
     }
 
     /**
@@ -113,15 +101,7 @@ public class BBExecutor {
      * @return True if the variable was successfully decremented
      */
     private boolean decr(ArrayList<String> args) {
-        boolean successful = false;
-        String vName = args.get(0);
-        for (BBVariable v : variables) {
-            if (v.getName().equals(vName)) {
-                successful = v.decrement();
-                break;
-            }
-        }
-        return successful;
+        return getVariable(args.get(0)).decrement();
     }
 
     /**
@@ -131,20 +111,8 @@ public class BBExecutor {
      * @return True if the variable was successfully cleared
      */
     private boolean clear(ArrayList<String> args) {
-        boolean successful = false;
-        String vName = args.get(0);
-        for (BBVariable v : variables) {
-            if (v.getName().equals(vName)) {
-                v.clear();
-                successful = true;
-                break;
-            }
-        }
-        if (!successful) {
-            variables.add(new BBVariable(vName));
-            successful = true;
-        }
-        return successful;
+        getVariable(args.get(0)).clear();
+        return true;
     }
 
     /**
@@ -154,23 +122,11 @@ public class BBExecutor {
      * @return True if the loop was successful
      */
     private boolean whileLoop(ArrayList<String> args) {
-        boolean found = false;
-        BBVariable loopVariable = null;
-        for (BBVariable v : variables) {
-            if (v.getName().equals(args.get(0))) {
-                loopVariable = v;
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            loopVariable = new BBVariable(args.get(0));
-            variables.add(loopVariable);
-        }
+        BBVariable loopVariable = getVariable(args.get(0));
         int target = Integer.parseInt(args.get(2));
         LoopCondition lc = new LoopCondition(loopVariable, target, bbp.getCurrentAddress() - 1, verbose);
         if (lc.loopFinished()) {
-            bbp.branch(findWhileEnd(bbp.getCurrentAddress()));
+            bbp.branch(findWhileEnd(bbp.getCurrentAddress()) + 1);
         } else {
             loops.push(lc);
         }
@@ -185,9 +141,7 @@ public class BBExecutor {
     private boolean end() {
         if (!loops.isEmpty()) {
             LoopCondition lc = loops.pop();
-            if (!lc.loopFinished()) {
-                bbp.branch(lc.getBranchTo());
-            }
+            bbp.branch(lc.getBranchTo());
         }
         return true;
     }
@@ -200,7 +154,6 @@ public class BBExecutor {
      */
     private int findWhileEnd(int address) {
         ArrayList<Statement> statements = bbp.getStatements();
-        System.out.println(address);
         int depth = 0;
         for (int i = address - 1; i < statements.size(); i++) {
             switch (statements.get(i).getOperation()) {
@@ -210,7 +163,6 @@ public class BBExecutor {
                 case "end":
                     depth--;
                     if (depth == 0) {
-                        System.out.println(i);
                         return i;
                     }
                     break;
@@ -219,5 +171,26 @@ public class BBExecutor {
             }
         }
         return -1;
+    }
+    /**
+     * Get the named variable or create it if it was not found
+     * @param name Name of the variable
+     * @return The named variable
+     */
+    private BBVariable getVariable(String name){
+        boolean found = false;
+        BBVariable var = null;
+        for (BBVariable v : variables) {
+            if (v.getName().equals(name)) {
+                var = v;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            var = new BBVariable(name);
+            variables.add(var);
+        }
+        return var;
     }
 }

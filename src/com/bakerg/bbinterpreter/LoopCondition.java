@@ -1,6 +1,7 @@
 package com.bakerg.bbinterpreter;
 
 /**
+ * Represents a while loop condition
  *
  * @author Geoff
  */

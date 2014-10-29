@@ -25,7 +25,7 @@ public class BBInterpreter {
         } catch (FileNotFoundException ex) {
             Logger.getLogger(BBInterpreter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        BBExecutor bbe = new BBExecutor(program, false);
+        BBExecutor bbe = new BBExecutor(program, true);
         try {
             bbe.executeProgram();
         } catch (NoSuchOperationException ex) {
